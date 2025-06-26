@@ -1,16 +1,8 @@
 # smartshop
 
-A new Flutter project.
+🛒 Flutter Shopping List App
 
-## Getting Started
+A personal learning project where I explore Flutter (Dart), local storage, state management, and clean UI design (not yet, but soon).
+Currently basic CRUD, but I’ll be adding more complex features like custom input flows, real-time sync, and UX polish.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Feedback from more experienced Flutter devs is very welcome!
