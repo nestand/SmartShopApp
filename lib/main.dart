@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'db__helper.dart';
 
 void main() {
   runApp(SmartShopApp());
@@ -9,9 +10,7 @@ class SmartShopApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Smart Shop',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
+      theme: ThemeData(primarySwatch: Colors.green),
       home: ShoppingListPage(),
     );
   }
@@ -24,7 +23,7 @@ class ShoppingListPage extends StatefulWidget {
 
 class _ShoppingListPageState extends State<ShoppingListPage> {
   final TextEditingController _controller = TextEditingController();
-  final List<String> _items = [];
+  final List<Map<String, dynamic>> _items = [];
 
   void _addItem() {
     if (_controller.text.trim().isEmpty) return;
@@ -43,9 +42,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Smart Shop'),
-      ),
+      appBar: AppBar(title: Text('Smart Shop')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -62,10 +59,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   ),
                 ),
                 SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _addItem,
-                  child: Text('Add'),
-                ),
+                ElevatedButton(onPressed: _addItem, child: Text('Add')),
               ],
             ),
             SizedBox(height: 16),

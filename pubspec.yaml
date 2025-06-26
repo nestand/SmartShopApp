@@ -1,5 +1,5 @@
 name: smartshop
-description: "A new Flutter project."
+description: "proto smartshop app"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -30,10 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  sqflite: ^2.3.2
+  path: ^1.9.0
   cupertino_icons: ^1.0.8
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
@@ -44,7 +44,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
