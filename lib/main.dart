@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
-import 'db__helper.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'dart:io';
+import '/db__helper.dart';
+import 'product.dart';
 
 void main() {
+  // Initialize FFI for desktop platforms
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   runApp(SmartShopApp());
 }
 
@@ -23,20 +32,42 @@ class ShoppingListPage extends StatefulWidget {
 
 class _ShoppingListPageState extends State<ShoppingListPage> {
   final TextEditingController _controller = TextEditingController();
-  final List<Map<String, dynamic>> _items = [];
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  void _addItem() {
-    if (_controller.text.trim().isEmpty) return;
+  List<Product> _products = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    final products = await _dbHelper.getAllProducts();
     setState(() {
-      _items.add(_controller.text.trim());
-      _controller.clear();
+      _products = products;
     });
   }
 
-  void _removeItem(int index) {
-    setState(() {
-      _items.removeAt(index);
-    });
+  Future<void> _addProduct() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    final newProduct = Product(
+      name: text,
+      description: 'No description yet',
+      price: null,
+      photoPath: null,
+    );
+
+    await _dbHelper.insertProduct(newProduct);
+    _controller.clear();
+    _loadProducts();
+  }
+
+  Future<void> _deleteProduct(int id) async {
+    await _dbHelper.deleteProduct(id);
+    _loadProducts();
   }
 
   @override
@@ -53,29 +84,35 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      labelText: 'Add Item',
+                      labelText: 'Product Name',
                       border: OutlineInputBorder(),
                     ),
                   ),
                 ),
                 SizedBox(width: 8),
-                ElevatedButton(onPressed: _addItem, child: Text('Add')),
+                ElevatedButton(onPressed: _addProduct, child: Text('Add')),
               ],
             ),
             SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                itemCount: _items.length,
-                itemBuilder: (_, index) => Card(
-                  child: ListTile(
-                    title: Text(_items[index]),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => _removeItem(index),
+              child: _products.isEmpty
+                  ? Center(child: Text('No products yet.'))
+                  : ListView.builder(
+                      itemCount: _products.length,
+                      itemBuilder: (_, index) {
+                        final product = _products[index];
+                        return Card(
+                          child: ListTile(
+                            title: Text(product.name),
+                            subtitle: Text(product.description),
+                            trailing: IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () => _deleteProduct(product.id!),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                ),
-              ),
             ),
           ],
         ),

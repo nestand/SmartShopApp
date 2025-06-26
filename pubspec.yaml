@@ -30,10 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sqflite: ^2.3.2
-  path: ^1.9.0
-  cupertino_icons: ^1.0.8
-  path_provider: ^2.1.5
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0  # Add this line
+  path_provider: ^2.1.1
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:
