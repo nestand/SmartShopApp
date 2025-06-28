@@ -3,9 +3,9 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
 import '/db__helper.dart';
 import 'product.dart';
+import 'widgets/product_card.dart';
 
 void main() {
-  // Initialize FFI for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -101,15 +101,9 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       itemCount: _products.length,
                       itemBuilder: (_, index) {
                         final product = _products[index];
-                        return Card(
-                          child: ListTile(
-                            title: Text(product.name),
-                            subtitle: Text(product.description),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () => _deleteProduct(product.id!),
-                            ),
-                          ),
+                        return ProductCard(
+                          product: product,
+                          onDelete: () => _deleteProduct(product.id!),
                         );
                       },
                     ),
