@@ -26,11 +26,13 @@ class SmartShopApp extends StatelessWidget {
 }
 
 class ShoppingListPage extends StatefulWidget {
+  const ShoppingListPage({Key? key}) : super(key: key);
+
   @override
-  _ShoppingListPageState createState() => _ShoppingListPageState();
+  ShoppingListPageState createState() => ShoppingListPageState();
 }
 
-class _ShoppingListPageState extends State<ShoppingListPage> {
+class ShoppingListPageState extends State<ShoppingListPage> {
   final TextEditingController _controller = TextEditingController();
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
@@ -65,9 +67,32 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     _loadProducts();
   }
 
+  Future<void> _showDeleteConfirmation(Product product) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete "${product.name}"?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await _deleteProduct(product.id!);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _deleteProduct(int id) async {
     await _dbHelper.deleteProduct(id);
-    _loadProducts();
+    await _loadProducts();
   }
 
   @override
@@ -103,7 +128,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                         final product = _products[index];
                         return ProductCard(
                           product: product,
-                          onDelete: () => _deleteProduct(product.id!),
+                          onDelete: () => _showDeleteConfirmation(product),
                         );
                       },
                     ),
