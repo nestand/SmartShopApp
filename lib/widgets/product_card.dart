@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import '../product.dart';
 
 class ProductCard extends StatelessWidget {
@@ -21,8 +22,11 @@ class ProductCard extends StatelessWidget {
             // Image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                product.displayPhotoPath,
+              child: Image(
+                image: product.photoPath != null
+                    ? FileImage(File(product.photoPath!))
+                    : const AssetImage('assets/images/default_product.png')
+                          as ImageProvider,
                 width: 64,
                 height: 64,
                 fit: BoxFit.cover,

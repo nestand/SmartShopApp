@@ -4,6 +4,7 @@ import 'dart:io';
 import '/db__helper.dart';
 import 'product.dart';
 import 'widgets/product_card.dart';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -55,16 +56,69 @@ class ShoppingListPageState extends State<ShoppingListPage> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
+    final picker = ImagePicker();
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Select Image Source'),
+        content: const Text('Choose where to pick the product image from.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ImageSource.camera),
+            child: const Text('Camera'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ImageSource.gallery),
+            child: const Text('Gallery'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    String? imagePath;
+
+    if (source != null) {
+      try {
+        final picked = await picker.pickImage(source: source);
+        if (picked != null) {
+          imagePath = picked.path;
+          print('Image picked: $imagePath');
+        }
+      } catch (e) {
+        print('Error picking image: $e');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
+      }
+    }
+
     final newProduct = Product(
       name: text,
       description: 'No description yet',
       price: null,
-      photoPath: null,
+      photoPath: imagePath,
     );
 
-    await _dbHelper.insertProduct(newProduct);
-    _controller.clear();
-    _loadProducts();
+    try {
+      await _dbHelper.insertProduct(newProduct);
+      _controller.clear();
+      await _loadProducts();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Product "${newProduct.name}" added successfully!'),
+        ),
+      );
+    } catch (e) {
+      print('Error inserting product: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error adding product: $e')));
+    }
   }
 
   Future<void> _showDeleteConfirmation(Product product) async {
