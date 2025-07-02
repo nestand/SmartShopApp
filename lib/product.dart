@@ -5,6 +5,7 @@ class Product {
   final double? price;
   final String? photoPath;
   final bool isFavorite;
+  final String? category;
 
   Product({
     this.id,
@@ -13,6 +14,7 @@ class Product {
     this.price,
     this.photoPath,
     this.isFavorite = false,
+    this.category,
   });
 
   // Default img
@@ -27,7 +29,8 @@ class Product {
       'description': description,
       'price': price,
       'photoPath': photoPath,
-      'isFavorite': isFavorite ? 1 : 0, // Convert bool to int for SQLite
+      'isFavorite': isFavorite ? 1 : 0,
+      'category': category,
     };
   }
 
@@ -38,7 +41,8 @@ class Product {
       description: map['description'],
       price: map['price'] != null ? map['price'].toDouble() : null,
       photoPath: map['photoPath'],
-      isFavorite: map['isFavorite'] == 1, // Convert int to bool
+      isFavorite: map['isFavorite'] == 1,
+      category: map['category'],
     );
   }
 
@@ -49,6 +53,7 @@ class Product {
     double? price,
     String? photoPath,
     bool? isFavorite,
+    String? category,
   }) {
     return Product(
       id: id ?? this.id,
@@ -57,6 +62,7 @@ class Product {
       price: price ?? this.price,
       photoPath: photoPath ?? this.photoPath,
       isFavorite: isFavorite ?? this.isFavorite,
+      category: category ?? this.category,
     );
   }
 }

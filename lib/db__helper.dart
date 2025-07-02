@@ -7,6 +7,7 @@ import 'product.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
+  static const int _version = 2; // Increment version
 
   DatabaseHelper._init();
 
@@ -20,7 +21,12 @@ class DatabaseHelper {
     final dbPath = await getApplicationDocumentsDirectory();
     final path = join(dbPath.path, 'shopping_list.db');
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: _version,
+      onCreate: _createDB,
+      onUpgrade: _onUpgrade, // Add this line
+    );
   }
 
   Future _createDB(Database db, int version) async {
@@ -31,9 +37,16 @@ class DatabaseHelper {
         description TEXT,
         price REAL,
         photoPath TEXT,
-        isFavorite INTEGER DEFAULT 0
+        isFavorite INTEGER DEFAULT 0,
+        category TEXT
       )
     ''');
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE products ADD COLUMN category TEXT');
+    }
   }
 
   // Add
