@@ -9,8 +9,11 @@ import 'widgets/shopping_mode_page.dart';
 import 'widgets/screens/product_management_page.dart';
 
 void main() {
+  // Initialize SQLite FFI for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    // Initialize sqflite FFI
     sqfliteFfiInit();
+    // Set the database factory to use FFI
     databaseFactory = databaseFactoryFfi;
   }
 
@@ -24,8 +27,12 @@ class SmartShopApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Smart Shop',
-      theme: ThemeData(primarySwatch: Colors.green),
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        useMaterial3: true, // Enable Material 3
+      ),
       home: const MainPage(),
+      debugShowCheckedModeBanner: false, // Remove debug banner
     );
   }
 }

@@ -53,6 +53,7 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 # System-level dependencies.
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
+pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
@@ -126,3 +127,7 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
+
+target_link_libraries(${BINARY_NAME} PRIVATE ${SQLITE3_LIBRARIES})
+target_include_directories(${BINARY_NAME} PRIVATE ${SQLITE3_INCLUDE_DIRS})
+target_compile_options(${BINARY_NAME} PRIVATE ${SQLITE3_CFLAGS_OTHER})
