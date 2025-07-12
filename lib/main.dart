@@ -119,16 +119,7 @@ class _MainPageState extends State<MainPage> {
     await _loadData();
   }
 
-  Future<void> _continueShoppingList(ShoppingList shoppingList) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ShoppingModePage(shoppingListId: shoppingList.id!),
-      ),
-    );
-    await _loadData();
-  }
-
+  /// Edit an existing shopping list
   Future<void> _editShoppingList(ShoppingList shoppingList) async {
     await Navigator.push(
       context,
@@ -136,16 +127,28 @@ class _MainPageState extends State<MainPage> {
         builder: (_) => ShoppingListCreationPage(existingList: shoppingList),
       ),
     );
-    await _loadData();
+    await _loadData(); // Refresh the data
   }
 
+  /// Start shopping with an existing list
+  Future<void> _startShopping(ShoppingList shoppingList) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ShoppingModePage(shoppingListId: shoppingList.id!),
+      ),
+    );
+    await _loadData(); // Refresh the data
+  }
+
+  /// Delete a shopping list with confirmation
   Future<void> _deleteShoppingList(ShoppingList shoppingList) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Delete "${shoppingList.name}"?'),
         content: const Text(
-          'This will delete the shopping list and all its items.',
+          'This action cannot be undone. All items in this list will be removed.',
         ),
         actions: [
           TextButton(
@@ -161,8 +164,28 @@ class _MainPageState extends State<MainPage> {
     );
 
     if (confirmed == true) {
-      await _dbHelper.deleteShoppingList(shoppingList.id!);
-      await _loadData();
+      try {
+        await _dbHelper.deleteShoppingList(shoppingList.id!);
+        await _loadData();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Shopping list "${shoppingList.name}" deleted'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting list: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -283,56 +306,39 @@ class _MainPageState extends State<MainPage> {
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Quick "Start Shopping" button
+                                // Edit list button
                                 IconButton(
                                   onPressed: () =>
-                                      _continueShoppingList(shoppingList),
+                                      _editShoppingList(shoppingList),
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    color: Colors.blue,
+                                  ),
+                                  tooltip: 'Edit List',
+                                ),
+                                // Start shopping button
+                                IconButton(
+                                  onPressed: () => _startShopping(shoppingList),
                                   icon: const Icon(
                                     Icons.play_arrow,
                                     color: Colors.green,
                                   ),
                                   tooltip: 'Start Shopping',
                                 ),
-                                // More options menu
-                                PopupMenuButton<String>(
-                                  onSelected: (value) {
-                                    switch (value) {
-                                      case 'edit':
-                                        _editShoppingList(shoppingList);
-                                        break;
-                                      case 'delete':
-                                        _deleteShoppingList(shoppingList);
-                                        break;
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.edit, color: Colors.blue),
-                                          SizedBox(width: 8),
-                                          Text('Edit List'),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Delete'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                // Delete button
+                                IconButton(
+                                  onPressed: () =>
+                                      _deleteShoppingList(shoppingList),
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  tooltip: 'Delete List',
                                 ),
                               ],
                             ),
-                            onTap: () => _continueShoppingList(
-                              shoppingList,
-                            ), // Default action: start shopping
+                            onTap: () =>
+                                _startShopping(shoppingList), // ✅ Fixed
                           ),
                         );
                       },
@@ -344,6 +350,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  /// Format date for display
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
