@@ -4,12 +4,9 @@ import 'dart:io';
 import '/db__helper.dart';
 import 'product.dart';
 import 'shopping_list.dart';
-import 'widgets/product_card.dart';
-import 'package:image_picker/image_picker.dart';
-import 'widgets/screens/product_form_page.dart';
 import 'widgets/shopping_list_creation_page.dart';
 import 'widgets/shopping_mode_page.dart';
-import 'widgets/screens/product_management_page.dart'; // new widget
+import 'widgets/screens/product_management_page.dart';
 
 void main() {
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -169,92 +166,6 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  // Add this method to _MainPageState class for debugging:
-  Future<void> _debugDatabase() async {
-    try {
-      final stats = await _dbHelper.getDatabaseStats();
-      final products = await _dbHelper.getAllProducts();
-
-      print('=== DATABASE DEBUG ===');
-      print('Products in DB: ${stats['products']}');
-      print('Shopping Lists in DB: ${stats['shopping_lists']}');
-      print('Items in DB: ${stats['shopping_list_items']}');
-      print('Products list: ${products.map((p) => p.name).toList()}');
-      print('===================');
-
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Database Debug'),
-            content: Text(
-              'Products: ${stats['products']}\n'
-              'Shopping Lists: ${stats['shopping_lists']}\n'
-              'Items: ${stats['shopping_list_items']}\n\n'
-              'Product names:\n${products.map((p) => '• ${p.name}').join('\n')}',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      print('Database debug error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Database error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  // Temporary test method to add a product
-  Future<void> _testAddProduct() async {
-    try {
-      print('Testing product insertion...');
-
-      final testProduct = Product(
-        name: 'Test Product ${DateTime.now().millisecondsSinceEpoch}',
-        description: 'This is a test product',
-        price: 9.99,
-        category: 'Test Category',
-        // ✅ Don't include quantity here - that's for ShoppingListItem
-      );
-
-      print('Product to insert: ${testProduct.toMap()}');
-
-      final id = await _dbHelper.insertProduct(testProduct);
-      print('Product inserted with ID: $id');
-
-      await _loadData();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Test product added with ID: $id'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e, stackTrace) {
-      print('Error inserting test product: $e');
-      print('Stack trace: $stackTrace');
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final activeLists = _shoppingLists.where((list) => list.isActive).toList();
@@ -263,18 +174,6 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: const Text('Smart Shop'),
         actions: [
-          // Add test product button
-          IconButton(
-            onPressed: _testAddProduct,
-            icon: const Icon(Icons.add),
-            tooltip: 'Test Add Product',
-          ),
-          // Debug button
-          IconButton(
-            onPressed: _debugDatabase,
-            icon: const Icon(Icons.bug_report),
-            tooltip: 'Debug Database',
-          ),
           IconButton(
             onPressed: () async {
               await Navigator.push(
