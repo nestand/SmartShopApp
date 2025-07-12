@@ -60,8 +60,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
         category: _selectedCategory,
       );
 
-      print('Saving product: ${product.toMap()}'); // Debug print
-
       // Call the onSave callback
       widget.onSave(product);
 

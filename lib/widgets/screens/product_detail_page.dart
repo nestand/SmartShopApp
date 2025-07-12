@@ -62,26 +62,30 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           );
           await DatabaseHelper.instance.updateProduct(updatedProduct);
 
-          setState(() {
-            _currentProduct = updatedProduct;
-          });
+          if (mounted) {
+            setState(() {
+              _currentProduct = updatedProduct;
+            });
 
-          widget.onProductUpdated?.call();
+            widget.onProductUpdated?.call();
 
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Image updated for "${_currentProduct.name}"'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Image updated for "${_currentProduct.name}"'),
-              backgroundColor: Colors.green,
+              content: Text('Error updating image: $e'),
+              backgroundColor: Colors.red,
             ),
           );
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating image: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
@@ -101,7 +105,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Future<void> _editProduct() async {
-    final result = await Navigator.push<Product>(
+    await Navigator.push<Product>(
       context,
       MaterialPageRoute(
         builder: (_) => ProductFormPage(
@@ -119,14 +123,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             widget.onProductUpdated?.call();
 
             // Show success message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Product "${updatedProduct.name}" updated successfully!',
+            if (mounted) {
+              // Add mounted check
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Product "${updatedProduct.name}" updated successfully!',
+                  ),
+                  backgroundColor: Colors.green,
                 ),
-                backgroundColor: Colors.green,
-              ),
-            );
+              );
+            }
           },
         ),
       ),
@@ -166,7 +173,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
+                        color: Colors.grey.withValues(alpha: 0.3), // Fixed
                         spreadRadius: 2,
                         blurRadius: 8,
                         offset: const Offset(0, 3),
@@ -239,7 +246,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3), // Fixed
                     spreadRadius: 2,
                     blurRadius: 8,
                     offset: const Offset(0, 3),
