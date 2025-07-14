@@ -27,6 +27,19 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   bool get _isEditMode => widget.existing != null;
 
+  String? _selectedCategory;
+
+  final List<String> _categories = [
+    'Bakery',
+    'Dairy',
+    'Meat',
+    'Vegetables',
+    'Fruits',
+    'Beverages',
+    'Snacks',
+    'Other',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +51,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
       _categoryController.text = product.category ?? '';
       _photoPath = product.photoPath;
       _isFavorite = product.isFavorite;
+
+      _selectedCategory = product.category;
+      if (_selectedCategory != null &&
+          !_categories.contains(_selectedCategory)) {
+        _categories.add(_selectedCategory!);
+      }
     }
   }
 
@@ -234,14 +253,27 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
               const SizedBox(height: 16),
 
-              // Category field
-              TextFormField(
-                controller: _categoryController,
+              // Category dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.category),
                 ),
+                items: _categories
+                    .map(
+                      (category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value;
+                  });
+                },
               ),
 
               const SizedBox(height: 16),
