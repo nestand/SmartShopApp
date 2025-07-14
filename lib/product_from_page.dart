@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import '../../product.dart';
+import 'product.dart';
+import 'db__helper.dart';
 
 class ProductFormPage extends StatefulWidget {
-  final Product? existingProduct;
+  final Product? existing;
   final Function(Product) onSave;
 
-  const ProductFormPage({
-    super.key,
-    this.existingProduct,
-    required this.onSave,
-  });
+  const ProductFormPage({super.key, this.existing, required this.onSave});
 
   @override
   State<ProductFormPage> createState() => _ProductFormPageState();
@@ -28,13 +25,13 @@ class _ProductFormPageState extends State<ProductFormPage> {
   bool _isFavorite = false;
   final ImagePicker _picker = ImagePicker();
 
-  bool get _isEditMode => widget.existingProduct != null;
+  bool get _isEditMode => widget.existing != null;
 
   @override
   void initState() {
     super.initState();
     if (_isEditMode) {
-      final product = widget.existingProduct!;
+      final product = widget.existing!;
       _nameController.text = product.name;
       _descriptionController.text = product.description;
       _priceController.text = product.price?.toString() ?? '';
@@ -88,15 +85,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
     }
   }
 
-  void _saveProduct() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _saveProduct() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
       final product = Product(
-        id: _isEditMode ? widget.existingProduct!.id : null,
+        id: widget.existing?.id,
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
-        price: _priceController.text.isEmpty
-            ? null
-            : double.tryParse(_priceController.text),
+        price: double.tryParse(_priceController.text.trim()),
         category: _categoryController.text.trim().isEmpty
             ? null
             : _categoryController.text.trim(),
@@ -104,8 +101,19 @@ class _ProductFormPageState extends State<ProductFormPage> {
         isFavorite: _isFavorite,
       );
 
-      widget.onSave(product);
-      Navigator.pop(context);
+      // ✅ Use callback if provided
+      await widget.onSave!(product);
+
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving product: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

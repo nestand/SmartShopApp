@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../../product.dart';
 import '../../shopping_list.dart';
 import '../../db__helper.dart';
@@ -76,12 +75,20 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
   /// Handle updating existing product
   Future<void> _handleProductUpdate(Product updatedProduct) async {
     try {
+      print('=== HANDLE PRODUCT UPDATE DEBUG ===');
+      print('Updated product: ${updatedProduct.toMap()}');
+
       await _dbHelper.updateProduct(updatedProduct);
       await _loadProducts();
+
+      print('Product updated successfully in UI');
+      print('===================================');
+
       _showSuccessMessage(
         'Product "${updatedProduct.name}" updated successfully!',
       );
     } catch (e) {
+      print('Error in _handleProductUpdate: $e');
       _showErrorMessage('Error updating product: $e');
     }
   }
@@ -499,6 +506,25 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
     );
   }
 
+  /// Edit an existing product
+  Future<void> _editProduct(Product product) async {
+    if (!mounted) return;
+
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ProductFormPage(existing: product, onSave: _handleProductUpdate),
+        ),
+      );
+      if (mounted) await _loadProducts();
+    } catch (e) {
+      debugPrint('Error editing product: $e');
+      if (mounted) _showErrorMessage('Error editing product: $e');
+    }
+  }
+
   /// Build products list
   Widget _buildProductsList() {
     return RefreshIndicator(
@@ -510,6 +536,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
           final product = _products[index];
           return ProductCard(
             product: product,
+            onEdit: () => _editProduct(product),
             onDelete: () => _showDeleteConfirmation(product),
             onReplaceImage: () => _replaceProductImage(product),
             onProductUpdated: _loadProducts,

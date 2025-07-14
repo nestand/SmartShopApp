@@ -3,7 +3,6 @@ import 'dart:io';
 import '../../product.dart';
 import '../../shopping_list.dart';
 import '../../db__helper.dart';
-import 'shopping_mode_page.dart';
 
 class ShoppingListCreationPage extends StatefulWidget {
   final ShoppingList? existingList;
@@ -107,17 +106,28 @@ class _ShoppingListCreationPageState extends State<ShoppingListCreationPage> {
 
   /// Save shopping list without starting shopping mode
   Future<void> _saveListOnly() async {
-    if (!_validateInputs()) return;
+    // ✅ Allow saving empty lists (just validate the name)
+    if (_nameController.text.trim().isEmpty) {
+      _showErrorSnackBar('Please enter a shopping list name', Colors.orange);
+      return;
+    }
 
     try {
       final listId = await _saveShoppingListToDatabase();
 
-      _showSuccessSnackBar(
-        _isEditMode
-            ? 'Shopping list "${_nameController.text.trim()}" updated!'
-            : 'Shopping list "${_nameController.text.trim()}" saved for later!',
-        showViewAction: true,
-      );
+      if (_selectedProductIds.isEmpty) {
+        _showSuccessSnackBar(
+          'Empty shopping list "${_nameController.text.trim()}" ${_isEditMode ? 'updated' : 'created'}!',
+          showViewAction: true,
+        );
+      } else {
+        _showSuccessSnackBar(
+          _isEditMode
+              ? 'Shopping list "${_nameController.text.trim()}" updated with ${_selectedProductIds.length} items!'
+              : 'Shopping list "${_nameController.text.trim()}" saved with ${_selectedProductIds.length} items!',
+          showViewAction: true,
+        );
+      }
 
       // Navigate back after delay
       await Future.delayed(const Duration(milliseconds: 1500));
@@ -126,32 +136,6 @@ class _ShoppingListCreationPageState extends State<ShoppingListCreationPage> {
       }
     } catch (e) {
       _showErrorSnackBar('Error saving shopping list: $e');
-    }
-  }
-
-  /// Save shopping list and immediately start shopping mode
-  Future<void> _saveAndStartShopping() async {
-    if (!_validateInputs(allowEmptyProducts: widget.allowEmpty)) return;
-
-    try {
-      final listId = await _saveShoppingListToDatabase();
-
-      if (_selectedProductIds.isEmpty) {
-        _showSuccessSnackBar(
-          'Empty shopping list "${_nameController.text.trim()}" ${_isEditMode ? 'updated' : 'created'}!',
-        );
-        Navigator.pop(context);
-      } else {
-        // Navigate to shopping mode
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ShoppingModePage(shoppingListId: listId),
-          ),
-        );
-      }
-    } catch (e) {
-      _showErrorSnackBar('Error: $e');
     }
   }
 
@@ -273,36 +257,33 @@ class _ShoppingListCreationPageState extends State<ShoppingListCreationPage> {
     );
   }
 
-  /// Build app bar with save action
+  /// Build app bar - simplified without save action
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       title: Text(_isEditMode ? 'Edit Shopping List' : 'Create Shopping List'),
-      actions: [
-        TextButton(
-          onPressed: _saveListOnly,
-          child: const Text(
-            'SAVE LIST',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ],
+      backgroundColor: Colors.green,
+      foregroundColor: Colors.white,
+      // ✅ Removed the actions - save button is now the FAB
     );
   }
 
-  /// Build floating action button for starting shopping
+  /// Build floating action button - now just for saving
   Widget? _buildFloatingActionButton() {
-    if (_selectedProductIds.isEmpty) return null;
+    // Only show save button when we have products selected OR we're editing
+    if (_selectedProductIds.isEmpty && !_isEditMode) return null;
 
     return FloatingActionButton.extended(
-      onPressed: _saveAndStartShopping,
-      backgroundColor: Colors.green,
+      onPressed: _saveListOnly,
+      backgroundColor: Colors.blue, // ✅ Changed to blue for "save"
       foregroundColor: Colors.white,
-      icon: const Icon(Icons.shopping_cart),
-      label: Text('START SHOPPING (${_selectedProductIds.length})'),
+      icon: const Icon(Icons.save),
+      label: Text(
+        _isEditMode
+            ? 'UPDATE LIST'
+            : _selectedProductIds.isEmpty
+            ? 'SAVE EMPTY LIST'
+            : 'SAVE LIST (${_selectedProductIds.length})',
+      ),
     );
   }
 
@@ -333,14 +314,14 @@ class _ShoppingListCreationPageState extends State<ShoppingListCreationPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.green.shade100,
+              color: Colors.blue.shade100, // ✅ Changed to blue
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.green.shade300),
+              border: Border.all(color: Colors.blue.shade300),
             ),
             child: Text(
               '${_selectedProductIds.length} selected',
               style: TextStyle(
-                color: Colors.green.shade700,
+                color: Colors.blue.shade700,
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -578,11 +559,41 @@ class _ShoppingListCreationPageState extends State<ShoppingListCreationPage> {
                           product.id,
                         );
                         final quantity = _quantities[product.id] ?? 1;
-
                         return _buildProductItem(product, isSelected, quantity);
                       },
                     ),
             ),
+
+            // ✅ Add helpful hint when no products selected
+            if (_selectedProductIds.isEmpty && _allProducts.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(top: 8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.blue.shade600,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Select products for your list, or save an empty list to add items later',
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

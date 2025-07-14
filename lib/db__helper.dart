@@ -7,7 +7,7 @@ import 'shopping_list.dart';
 
 class DatabaseHelper {
   static const _databaseName = "SmartShop.db";
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4; // Increment version for migration
 
   // Singleton pattern
   DatabaseHelper._privateConstructor();
@@ -66,7 +66,7 @@ class DatabaseHelper {
         CREATE TABLE shopping_lists(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
-          createdAt TEXT NOT NULL,
+          createdAt INTEGER NOT NULL,
           isActive INTEGER NOT NULL DEFAULT 1
         )
       ''');
@@ -110,6 +110,51 @@ class DatabaseHelper {
           ''');
         } catch (e) {
           debugPrint('Column isFavorite might already exist: $e');
+        }
+      }
+
+      // Fix: Add migration for date format conversion
+      if (oldVersion < 4) {
+        try {
+          // Get all shopping lists with string dates
+          final lists = await txn.rawQuery(
+            'SELECT id, createdAt FROM shopping_lists',
+          );
+
+          for (final list in lists) {
+            final createdAtValue = list['createdAt'];
+            if (createdAtValue is String) {
+              // Try to convert ISO string to timestamp
+              try {
+                final dateTime = DateTime.parse(createdAtValue);
+                final timestamp = dateTime.millisecondsSinceEpoch;
+
+                await txn.update(
+                  'shopping_lists',
+                  {'createdAt': timestamp},
+                  where: 'id = ?',
+                  whereArgs: [list['id']],
+                );
+                debugPrint(
+                  'Converted date for list ${list['id']}: $createdAtValue -> $timestamp',
+                );
+              } catch (e) {
+                // If parsing fails, use current timestamp
+                final timestamp = DateTime.now().millisecondsSinceEpoch;
+                await txn.update(
+                  'shopping_lists',
+                  {'createdAt': timestamp},
+                  where: 'id = ?',
+                  whereArgs: [list['id']],
+                );
+                debugPrint(
+                  'Failed to parse date for list ${list['id']}, using current time',
+                );
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Error migrating date format: $e');
         }
       }
     });

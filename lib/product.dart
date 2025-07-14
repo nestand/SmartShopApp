@@ -1,27 +1,38 @@
+import 'utils/database_utils.dart';
+
 class Product {
   final int? id;
   final String name;
   final String description;
   final double? price;
-  final String? photoPath;
   final String? category;
-  final bool isFavorite; // ✅ Add this field
+  final String? photoPath;
+  final bool isFavorite;
 
-  Product({
+  const Product({
     this.id,
     required this.name,
-    required this.description,
+    this.description = '',
     this.price,
-    this.photoPath,
     this.category,
-    this.isFavorite = false, // ✅ Add this parameter with default value
+    this.photoPath,
+    this.isFavorite = false,
   });
 
-  // Default img
-  String get displayPhotoPath {
-    return photoPath ?? 'assets/images/default_product.png';
+  /// Create Product from database map
+  factory Product.fromMap(Map<String, dynamic> map) {
+    return Product(
+      id: DatabaseUtils.safeInt(map['id']),
+      name: DatabaseUtils.safeString(map['name']),
+      description: DatabaseUtils.safeString(map['description']),
+      price: DatabaseUtils.safeDouble(map['price']),
+      category: map['category'] as String?,
+      photoPath: map['photoPath'] as String?,
+      isFavorite: DatabaseUtils.safeBool(map['isFavorite']),
+    );
   }
 
+  /// Convert Product to database map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -30,22 +41,11 @@ class Product {
       'price': price,
       'category': category,
       'photoPath': photoPath,
-      'isFavorite': isFavorite ? 1 : 0, // ✅ Keep this line
+      'isFavorite': isFavorite ? 1 : 0,
     };
   }
 
-  factory Product.fromMap(Map<String, dynamic> map) {
-    return Product(
-      id: map['id'],
-      name: map['name'] ?? '',
-      description: map['description'] ?? '', // ✅ Add default empty string
-      price: map['price']?.toDouble(),
-      category: map['category'],
-      photoPath: map['photoPath'],
-      isFavorite: map['isFavorite'] == 1, // ✅ Keep this line
-    );
-  }
-
+  /// Create a copy with modified fields
   Product copyWith({
     int? id,
     String? name,
@@ -53,7 +53,7 @@ class Product {
     double? price,
     String? category,
     String? photoPath,
-    bool? isFavorite, // ✅ Keep this parameter
+    bool? isFavorite,
   }) {
     return Product(
       id: id ?? this.id,
@@ -62,12 +62,12 @@ class Product {
       price: price ?? this.price,
       category: category ?? this.category,
       photoPath: photoPath ?? this.photoPath,
-      isFavorite: isFavorite ?? this.isFavorite, // ✅ Keep this line
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 
   @override
   String toString() {
-    return 'Product{id: $id, name: $name, description: $description, price: $price, category: $category, photoPath: $photoPath, isFavorite: $isFavorite}';
+    return 'Product(id: $id, name: $name, description: $description, price: $price, category: $category, photoPath: $photoPath, isFavorite: $isFavorite)';
   }
 }

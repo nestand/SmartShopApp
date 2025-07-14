@@ -1,6 +1,6 @@
 import 'product.dart';
+import 'utils/database_utils.dart';
 
-//new calss to handle two modes correctly
 class ShoppingList {
   final int? id;
   final String name;
@@ -16,26 +16,56 @@ class ShoppingList {
     this.items = const [],
   });
 
+  /// Create ShoppingList from database map
+  factory ShoppingList.fromMap(Map<String, dynamic> map) {
+    return ShoppingList(
+      id: DatabaseUtils.safeInt(map['id']),
+      name: DatabaseUtils.safeString(map['name']),
+      createdAt: _parseCreatedAt(map['createdAt']), // Use helper method
+      isActive: DatabaseUtils.safeBool(map['isActive'], defaultValue: true),
+      items: const [],
+    );
+  }
+
+  /// Helper method to parse createdAt from various formats
+  static DateTime _parseCreatedAt(dynamic value) {
+    if (value == null) return DateTime.now();
+
+    if (value is int) {
+      // Handle timestamp (milliseconds since epoch)
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    }
+
+    if (value is String) {
+      // Try to parse as int first (timestamp as string)
+      final timestamp = int.tryParse(value);
+      if (timestamp != null) {
+        return DateTime.fromMillisecondsSinceEpoch(timestamp);
+      }
+
+      // Try to parse as ISO 8601 string
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing date string: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+
+    return DateTime.now();
+  }
+
+  /// Convert ShoppingList to database map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'name': name,
-      'createdAt': createdAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.millisecondsSinceEpoch, // Store as timestamp
       'isActive': isActive ? 1 : 0,
     };
   }
 
-  factory ShoppingList.fromMap(Map<String, dynamic> map) {
-    return ShoppingList(
-      id: map['id'],
-      name: map['name'],
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
-      isActive: map['isActive'] == 1,
-      items: [], // Will be loaded separately
-    );
-  }
-
-  // Add copyWith method
+  /// Create a copy with modified fields
   ShoppingList copyWith({
     int? id,
     String? name,
@@ -51,17 +81,22 @@ class ShoppingList {
       items: items ?? this.items,
     );
   }
+
+  @override
+  String toString() {
+    return 'ShoppingList(id: $id, name: $name, createdAt: $createdAt, isActive: $isActive, items: ${items.length})';
+  }
 }
 
 class ShoppingListItem {
   final int? id;
   final int shoppingListId;
   final int productId;
-  final int quantity; // ✅ Quantity belongs here
+  final int quantity;
   final bool isChecked;
-  final Product? product;
+  final Product? product; // Optional product details
 
-  ShoppingListItem({
+  const ShoppingListItem({
     this.id,
     required this.shoppingListId,
     required this.productId,
@@ -70,27 +105,29 @@ class ShoppingListItem {
     this.product,
   });
 
+  /// Create ShoppingListItem from database map
+  factory ShoppingListItem.fromMap(Map<String, dynamic> map) {
+    return ShoppingListItem(
+      id: DatabaseUtils.safeInt(map['id']),
+      shoppingListId: DatabaseUtils.safeIntNotNull(map['shopping_list_id']),
+      productId: DatabaseUtils.safeIntNotNull(map['product_id']),
+      quantity: DatabaseUtils.safeIntNotNull(map['quantity'], defaultValue: 1),
+      isChecked: DatabaseUtils.safeBool(map['isChecked']),
+    );
+  }
+
+  /// Convert ShoppingListItem to database map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'shopping_list_id': shoppingListId,
       'product_id': productId,
       'quantity': quantity,
-      'isChecked': isChecked ? 1 : 0, // Convert bool to int for SQLite
+      'isChecked': isChecked ? 1 : 0,
     };
   }
 
-  factory ShoppingListItem.fromMap(Map<String, dynamic> map) {
-    return ShoppingListItem(
-      id: map['id'],
-      shoppingListId: map['shopping_list_id'],
-      productId: map['product_id'],
-      quantity: map['quantity'] ?? 1,
-      isChecked: map['isChecked'] == 1, // Convert int back to bool
-    );
-  }
-
-  // Add copyWith method
+  /// Create a copy with modified fields
   ShoppingListItem copyWith({
     int? id,
     int? shoppingListId,
@@ -107,5 +144,10 @@ class ShoppingListItem {
       isChecked: isChecked ?? this.isChecked,
       product: product ?? this.product,
     );
+  }
+
+  @override
+  String toString() {
+    return 'ShoppingListItem(id: $id, shoppingListId: $shoppingListId, productId: $productId, quantity: $quantity, isChecked: $isChecked)';
   }
 }

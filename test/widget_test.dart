@@ -12,7 +12,7 @@ import 'package:smartshop/main.dart';
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(SmartShopApp());
+    await tester.pumpWidget(const SmartShopApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

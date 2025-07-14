@@ -126,7 +126,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     border: OutlineInputBorder(),
                     prefixText: '€ ',
                   ),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   validator: (value) {
                     if (value?.isNotEmpty == true) {
                       final price = double.tryParse(value!);
