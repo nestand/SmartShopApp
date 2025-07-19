@@ -18,7 +18,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.4'
+        flutter-version: '3.24.0'  
         channel: 'stable'
         
     - name: Enable Windows desktop
@@ -27,11 +27,43 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
       
-    - name: Build Windows app
-      run: flutter build windows --release
+    - name: Run flutter doctor
+      run: flutter doctor -v
       
-    - name: Upload Windows build
+    - name: Build Windows app
+      run: flutter build windows --release --verbose
+      
+    - name: List build directory contents  
+      run: |
+        echo "Listing build directory:"
+        dir build\ /s
+        if (Test-Path "build\windows\x64\runner\Release") {
+          echo "Found Release directory at x64 path"
+          dir "build\windows\x64\runner\Release"
+        }
+        if (Test-Path "build\windows\runner\Release") {
+          echo "Found Release directory at runner path"  
+          dir "build\windows\runner\Release"
+        }
+      shell: powershell
+      
+    - name: Upload Windows build (try x64 path)
       uses: actions/upload-artifact@v4
       with:
-        name: smartshop-windows
+        name: smartshop-windows-x64
+        path: build/windows/x64/runner/Release/
+      continue-on-error: true
+        
+    - name: Upload Windows build (try runner path)  
+      uses: actions/upload-artifact@v4
+      with:
+        name: smartshop-windows-runner
         path: build/windows/runner/Release/
+      continue-on-error: true
+
+    - name: Upload entire windows build directory 
+      uses: actions/upload-artifact@v4
+      with:
+        name: smartshop-windows-full
+        path: build/windows/
+      if: always()
