@@ -18,7 +18,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.24.0'  
+        flutter-version: '3.32.7'  # ✅ Updated to match the local version
         channel: 'stable'
         
     - name: Enable Windows desktop
@@ -33,7 +33,7 @@ jobs:
     - name: Build Windows app
       run: flutter build windows --release --verbose
       
-    - name: List build directory contents  
+    - name: List build directory contents
       run: |
         echo "Listing build directory:"
         dir build\ /s
@@ -61,7 +61,7 @@ jobs:
         path: build/windows/runner/Release/
       continue-on-error: true
 
-    - name: Upload entire windows build directory 
+    - name: Upload entire windows build directory
       uses: actions/upload-artifact@v4
       with:
         name: smartshop-windows-full
