@@ -33,19 +33,22 @@ jobs:
     - name: Build Windows app
       run: flutter build windows --release --verbose
       
-    - name: List build directory contents
+    - name: List build directory contents # Debug and fix dir error  
       run: |
-        echo "Listing build directory:"
-        dir build\ /s
-        if (Test-Path "build\windows\x64\runner\Release") {
-          echo "Found Release directory at x64 path"
-          dir "build\windows\x64\runner\Release"
-        }
-        if (Test-Path "build\windows\runner\Release") {
-          echo "Found Release directory at runner path"  
-          dir "build\windows\runner\Release"
-        }
+         Write-Host "Listing build directory:"
+         Get-ChildItem -Path build\ -Recurse
+
+         if (Test-Path "build\windows\x64\runner\Release") {
+            Write-Host "Found Release directory at x64 path"
+            Get-ChildItem "build\windows\x64\runner\Release"
+         }
+         if (Test-Path "build\windows\runner\Release") {
+            Write-Host "Found Release directory at runner path"
+            Get-ChildItem "build\windows\runner\Release"
+         }
+         }
       shell: powershell
+
       
     - name: Upload Windows build (try x64 path)
       uses: actions/upload-artifact@v4
@@ -67,3 +70,6 @@ jobs:
         name: smartshop-windows-full
         path: build/windows/
       if: always()
+
+    - name: Build finished
+      run: echo "✅ Windows build completed and artifacts uploaded (if successful)." 
