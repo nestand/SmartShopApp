@@ -18,7 +18,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.7'  # ✅ Updated to match the local version
+        flutter-version: '3.32.7'
         channel: 'stable'
         
     - name: Enable Windows desktop
@@ -33,43 +33,79 @@ jobs:
     - name: Build Windows app
       run: flutter build windows --release --verbose
       
-    - name: List build directory contents # Debug and fix dir error  
+    - name: Debug - List build directory contents
       run: |
-         Write-Host "Listing build directory:"
-         Get-ChildItem -Path build\ -Recurse
-
-         if (Test-Path "build\windows\x64\runner\Release") {
-            Write-Host "Found Release directory at x64 path"
-            Get-ChildItem "build\windows\x64\runner\Release"
-         }
-         if (Test-Path "build\windows\runner\Release") {
-            Write-Host "Found Release directory at runner path"
-            Get-ChildItem "build\windows\runner\Release"
-         }
-         }
+        Write-Host "=== BUILD DIRECTORY STRUCTURE ==="
+        if (Test-Path "build") {
+          Get-ChildItem -Path "build" -Recurse | Select-Object FullName
+        } else {
+          Write-Host "❌ Build directory not found!"
+          exit 0
+        }
+        
+        Write-Host ""
+        Write-Host "=== CHECKING COMMON WINDOWS BUILD PATHS ==="
+        
+        $possiblePaths = @(
+          "build\windows\x64\runner\Release",
+          "build\windows\runner\Release", 
+          "build\windows\Win32\runner\Release",
+          "build\windows\x64\Release",
+          "build\windows\Release"
+        )
+        
+        $foundPath = $false
+        foreach ($path in $possiblePaths) {
+          if (Test-Path $path) {
+            Write-Host "✅ Found Windows build at: $path"
+            Write-Host "Contents:"
+            Get-ChildItem $path | Format-Table Name, Length, LastWriteTime -AutoSize
+            $foundPath = $true
+          } else {
+            Write-Host "❌ Not found: $path"
+          }
+        }
+        
+        if (-not $foundPath) {
+          Write-Host "⚠️ No standard build paths found. Checking entire build/windows structure:"
+          if (Test-Path "build\windows") {
+            Get-ChildItem "build\windows" -Recurse | Where-Object {$_.Name -like "*.exe"} | Select-Object FullName
+          }
+        }
       shell: powershell
-
+      continue-on-error: true
       
-    - name: Upload Windows build (try x64 path)
+    - name: Upload Windows build (x64 path)
       uses: actions/upload-artifact@v4
       with:
         name: smartshop-windows-x64
         path: build/windows/x64/runner/Release/
       continue-on-error: true
         
-    - name: Upload Windows build (try runner path)  
+    - name: Upload Windows build (runner path)  
       uses: actions/upload-artifact@v4
       with:
         name: smartshop-windows-runner
         path: build/windows/runner/Release/
       continue-on-error: true
+      
+    - name: Upload Windows build (Win32 path)
+      uses: actions/upload-artifact@v4
+      with:
+        name: smartshop-windows-win32
+        path: build/windows/Win32/runner/Release/
+      continue-on-error: true
 
-    - name: Upload entire windows build directory
+    - name: Upload entire windows build directory (fallback)
       uses: actions/upload-artifact@v4
       with:
         name: smartshop-windows-full
         path: build/windows/
       if: always()
 
-    - name: Build finished
-      run: echo "✅ Windows build completed and artifacts uploaded (if successful)." 
+    - name: Build completion summary
+      run: |
+        Write-Host "🎉 Windows build workflow completed!"
+        Write-Host "📦 Check the 'Actions' tab for downloadable artifacts."
+        Write-Host "🔍 Look for artifacts named 'smartshop-windows-*'"
+      shell: powershell
